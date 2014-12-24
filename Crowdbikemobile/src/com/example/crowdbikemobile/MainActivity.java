@@ -1,51 +1,93 @@
 package com.example.crowdbikemobile;
 
-import android.os.Bundle;
 import android.app.Activity;
-import android.view.Menu;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
 import android.widget.TextView;
-import at.abraxas.amarino.Amarino;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements LocationListener{
 	
-	private static final String DEVICE_ADDRESS = "00:12:00:09:03:01";
-
+	private LocationManager locationManager;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
-        Amarino.connect(this, DEVICE_ADDRESS);
-    }
-    
-    
-    @Override
-    protected void onStart() {
-    	// TODO Auto-generated method stub
-    	super.onStart();
-    	
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
     }
     
     @Override
-	protected void onStop() {
-		// TODO Auto-generated method stub
-		super.onStop();
-		Amarino.disconnect(this, DEVICE_ADDRESS);
+	protected void onPause() {
+		super.onPause();
+		locationManager.removeUpdates(this);
+	}
+    
+	@Override
+	protected void onResume() {
+		super.onResume();
 		
+		// Requisitando posição geográfica do GPS ou da rede
+	    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
 	}
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-    
-    
-    public void sendInformation(String informationText){
-        String text = null;
-        informationText = text;
-    	Amarino.sendDataToArduino(this, DEVICE_ADDRESS, 'A', text);	
-    }
-    
+
+    /*
+     * Os métodos a seguir serão usados para capturar a posição geográfica do aparelho 
+     * 
+     */
+	
+	/**
+	 * Este método é notificado sempre que a posição geográfica do aparelho
+	 * for atualizada.
+	 * 
+	 * A ideia é que toda vez que esse método for chamado pelo sistema, o 
+	 * aparelho user uma asynctask para enviar a posição geográfica 
+	 * para o servidor
+	 * 
+	 */
+	@Override
+	public void onLocationChanged(Location location) {
+		
+		//int latitude  = (int)(location.getLatitude() * 1E6);
+		//int longitude = (int)(location.getLongitude() * 1E6);
+
+		double latitude  = location.getLatitude();
+		double longitude = location.getLongitude();
+		
+		// Exibindo as novas coordenadas na activity 
+		TextView txtLatitude  = (TextView) findViewById(R.id.latitude);
+		TextView txtLongitude = (TextView) findViewById(R.id.longitude);
+        
+        String latitudeString  = String.valueOf(latitude);
+        String longitudeString = String.valueOf(longitude);
+        
+        txtLatitude.setText("latitude: "   + latitudeString);
+        txtLongitude.setText("longitude: " + longitudeString);
+
+        // Instanciando a asynctask para contato com o servidor e acesso ao arduíno
+        ContatoComServidor task = new ContatoComServidor(this);
+        task.execute(latitudeString, longitudeString);
+        
+	}
+
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+	}
+
+
+	@Override
+	public void onProviderEnabled(String provider) {
+	}
+
+
+	@Override
+	public void onProviderDisabled(String provider) {
+	}
+        
 }
