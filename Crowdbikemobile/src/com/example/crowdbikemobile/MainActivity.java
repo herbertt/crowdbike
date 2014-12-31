@@ -68,9 +68,11 @@ public class MainActivity extends Activity{
  			tarefasParalelas();
  			
  		}else{
- 			// Não pode pegar a localização
- 			// GPS or Network está desabilitado
- 			// Pede para o usuário habilitar
+ 			/* 
+ 			 * Não pode pegar a localização
+ 			 * GPS or Network está desabilitado
+ 			 * Pede para o usuário habilitar
+ 			 */
  			gps.showSettingsAlert();
  		}
     }
