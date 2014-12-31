@@ -1,93 +1,113 @@
 package com.example.crowdbikemobile;
 
 import android.app.Activity;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends Activity implements LocationListener{
+public class MainActivity extends Activity{
 	
-	private LocationManager locationManager;
+	private String latitudeString  = "";
+	private String longitudeString = "";
+	private Tempo tempoLocal = new Tempo();
+	GPSTracker gps;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        
+        //Captando a posição geográfica
+        posicaoGeografica();
+        
+        //Executando tarefas paralelas
+        tarefasParalelas();
+        
+        //Setando a cor de fundo. Padrão: verde
+        setarCorDeFundo(R.color.verde);
     }
-    
+
     @Override
 	protected void onPause() {
 		super.onPause();
-		locationManager.removeUpdates(this);
 	}
     
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
-		// Requisitando posição geográfica do GPS ou da rede
-	    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
 	}
-
-
-
-    /*
-     * Os métodos a seguir serão usados para capturar a posição geográfica do aparelho 
+	
+    /**
+     * Este método seta a cor de fundo do aplicativo
+     * @param cor	Código inteiro da cor. A lista de cores disponíveis está em res/calues/colors.xml
+     */
+    public void setarCorDeFundo(int cor){
+    	View view = this.getWindow().getDecorView();
+        view.setBackgroundColor(getResources().getColor(cor));
+    }
+    
+    /**
+     * Este método identifica a posição geográfica do aparelho
+     * A posição é armazenada nos atributos privados latitudeString e longitudeString,
      * 
      */
-	
+    public void posicaoGeografica(){
+    	
+        //Instancia um objeto GPSTracker
+        gps = new GPSTracker(MainActivity.this);
+
+        // Checa se o GPS está habilitado
+ 		if(gps.canGetLocation()){
+
+ 			latitudeString  = String.valueOf(gps.getLatitude());
+ 			longitudeString = String.valueOf(gps.getLongitude());
+ 			
+ 			Toast.makeText(getApplicationContext(), "Sua localização é - \nLat: " + latitudeString + "\nLong: " + longitudeString, Toast.LENGTH_LONG).show();
+ 			tarefasParalelas();
+ 			
+ 		}else{
+ 			// Não pode pegar a localização
+ 			// GPS or Network está desabilitado
+ 			// Pede para o usuário habilitar
+ 			gps.showSettingsAlert();
+ 		}
+    }
+    
+    /**
+     * Este método executa as tarefas paralelas para:
+     *  - Acesso ao servidor
+     *  - Receber informações de tempo
+     */
+    public void tarefasParalelas(){
+
+        //Instanciando a asynctask para contato com o servidor e acesso ao arduíno
+        AsyncServidor task = new AsyncServidor(this);
+        //task.execute(latitudeString, longitudeString);
+        
+        //Instanciando a asynktask para contato com o serviço de tempo
+        AsyncTempo tempo = new AsyncTempo(this);
+        tempo.execute(latitudeString, longitudeString);
+    }
+    
 	/**
-	 * Este método é notificado sempre que a posição geográfica do aparelho
-	 * for atualizada.
+	 * Este método seta o atributo tempoMain.
+	 * Este atributo armazena as informações de tempo
 	 * 
-	 * A ideia é que toda vez que esse método for chamado pelo sistema, o 
-	 * aparelho user uma asynctask para enviar a posição geográfica 
-	 * para o servidor
-	 * 
+	 * @param tempoMain	objeto Tempo setado com as informações coletadas do tempo
 	 */
-	@Override
-	public void onLocationChanged(Location location) {
+
+	public void setTempoMain(Tempo tempoMain) {
+		this.tempoLocal = tempoMain;
 		
-		//int latitude  = (int)(location.getLatitude() * 1E6);
-		//int longitude = (int)(location.getLongitude() * 1E6);
-
-		double latitude  = location.getLatitude();
-		double longitude = location.getLongitude();
+		TextView txtTemp = (TextView) findViewById(R.id.temperatura);
+		TextView txtDesc = (TextView) findViewById(R.id.previsao);
+        
+		int temperatura = Double.valueOf(tempoLocal.getTemperatura()).intValue();
 		
-		// Exibindo as novas coordenadas na activity 
-		TextView txtLatitude  = (TextView) findViewById(R.id.latitude);
-		TextView txtLongitude = (TextView) findViewById(R.id.longitude);
-        
-        String latitudeString  = String.valueOf(latitude);
-        String longitudeString = String.valueOf(longitude);
-        
-        txtLatitude.setText("latitude: "   + latitudeString);
-        txtLongitude.setText("longitude: " + longitudeString);
-
-        // Instanciando a asynctask para contato com o servidor e acesso ao arduíno
-        ContatoComServidor task = new ContatoComServidor(this);
-        task.execute(latitudeString, longitudeString);
-        
+		txtTemp.setText(temperatura + "ºc");
+		txtDesc.setText(tempoLocal.getDescricao());
 	}
-
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-	}
-
-
-	@Override
-	public void onProviderEnabled(String provider) {
-	}
-
-
-	@Override
-	public void onProviderDisabled(String provider) {
-	}
-        
+    
 }
