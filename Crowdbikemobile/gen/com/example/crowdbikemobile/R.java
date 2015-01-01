@@ -49,6 +49,15 @@ public final class R {
         public static final int hello_world=0x7f060002;
     }
     public static final class style {
-        public static final int AppTheme=0x7f070000;
+        /** 
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        
+         */
+        public static final int AppBaseTheme=0x7f070000;
+        /**  Application theme. 
+         */
+        public static final int AppTheme=0x7f070001;
     }
 }
