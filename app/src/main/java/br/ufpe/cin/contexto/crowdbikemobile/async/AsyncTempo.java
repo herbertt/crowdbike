@@ -1,20 +1,8 @@
 package br.ufpe.cin.contexto.crowdbikemobile.async;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import br.ufpe.cin.contexto.crowdbikemobile.MainActivity;
-import br.ufpe.cin.contexto.crowdbikemobile.pojo.Tempo;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import com.example.crowdbikemobile.R;
 import com.squareup.okhttp.FormEncodingBuilder;
@@ -23,9 +11,15 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
-import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Log;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import br.ufpe.cin.contexto.crowdbikemobile.MainActivity;
+import br.ufpe.cin.contexto.crowdbikemobile.pojo.Tempo;
 
 public class AsyncTempo extends AsyncTask <String, Void, Tempo> {
 	
@@ -50,47 +44,48 @@ public class AsyncTempo extends AsyncTask <String, Void, Tempo> {
 		 */
 		String latitude  = params[0];
 		String longitude = params[1];
-		
-		String line;
 		String result = "false";
-		String resultado = "";
+		if(!latitude.equals("") && !longitude.equals(""))
+		{
+			String line;
+			String resultado = "";
 		
 		/*
-		 * Aqui est� o endere�o do servi�o de tempo
+		 * Aqui esta o endereco do servico de tempo
 		 * 
 		 */
-		String uri = "http://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude;
-		
-		int responseCode = 0;
-		
-		try {
-			OkHttpClient client = new OkHttpClient();
-            RequestBody body = new FormEncodingBuilder()
-                    .add("latitude", latitude)
-                    .add("longitude",longitude)
-                    .build();
+			String uri = "http://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude;
 
-            Request request = new Request.Builder()
-                    .url(uri)
-                    .post(body)
-                    .build();
+			int responseCode = 0;
 
-            int executeCount = 0;
-            Response response;
+			try {
+				OkHttpClient client = new OkHttpClient();
+				RequestBody body = new FormEncodingBuilder()
+						.add("latitude", latitude)
+						.add("longitude", longitude)
+						.build();
 
-            do
-            {
-                response = client.newCall(request).execute();
-                executeCount++;
-            }
-            while(response.code() == 408 && executeCount < 5);
+				Request request = new Request.Builder()
+						.url(uri)
+						.post(body)
+						.build();
 
-            result = response.body().string();
+				int executeCount = 0;
+				Response response;
+
+				do {
+					response = client.newCall(request).execute();
+					executeCount++;
+				}
+				while (response.code() == 408 && executeCount < 5);
+
+				result = response.body().string();
 
 
-		} catch (Exception e) {
-			responseCode = 408;
-			e.printStackTrace();
+			} catch (Exception e) {
+				responseCode = 408;
+				e.printStackTrace();
+			}
 		}
 
 		return parseJson(result);

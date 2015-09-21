@@ -46,6 +46,7 @@ public class MapDisplayActivity extends Activity {
 	public TableRow tr2;
 	public Intent intent;
 	public ArrayList<String> coordinates;
+	public Spinner spinner;
 
 	@Override
 	protected void onCreate(Bundle icicle) {
@@ -137,11 +138,11 @@ public class MapDisplayActivity extends Activity {
 		String id = String.valueOf(generateUniqueId(getApplicationContext()));
 		Entity entity = new Entity();
 		List<Attributes> attributes = new ArrayList<Attributes>();
-		attributes.add(new Attributes("title", "String", "CPA", null));
+		attributes.add(new Attributes("title", "String", spinner.getSelectedItem().toString(), null));
 		List<Metadata> metadatas = new ArrayList<Metadata>();
 		metadatas.add(new Metadata("location", "String", "WGS84"));
 		attributes.add(new Attributes("GPSCoord","coords", latitude + ", " + longitude ,metadatas));
-		attributes.add(new Attributes("endereco", "String", "Endereco qualquer", null));
+		attributes.add(new Attributes("endereco", "String", "Endereco", null));
 		attributes.add(new Attributes("dataOcorrencia", "String",AdapterOcurrence.df.format(Calendar.getInstance().getTime()),null));
 		attributes.add(new Attributes("userId", "String", "1",null));
 
@@ -226,7 +227,7 @@ public class MapDisplayActivity extends Activity {
 
 	private void setSpinner() {
 
-		Spinner spinner = (Spinner) findViewById(R.id.menu_spinner);
+		spinner = (Spinner) findViewById(R.id.menu_spinner);
 		spinner.setBackgroundResource(R.drawable.green_spinner_default_holo_light);
 		spinner.setPopupBackgroundResource(android.R.color.white);
 
